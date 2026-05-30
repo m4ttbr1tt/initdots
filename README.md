@@ -14,12 +14,9 @@ cd initdots
 Install prerequisites if needed:
 
 ```bash
-# macOS
-brew install age git
-
 # Debian/Ubuntu
 sudo apt update
-sudo apt install age git openssh-client
+sudo apt install age git openssh-client expect
 ```
 
 Run the decrypt/bootstrap script:
@@ -30,7 +27,7 @@ Run the decrypt/bootstrap script:
 
 The script will:
 
-1. Decrypt every `*.age` file in this repo using an `age` passphrase prompt.
+1. Prompt once for the shared `age` passphrase and decrypt every `*.age` file in this repo.
 2. Move decrypted files into `~/.ssh` with safe permissions.
 3. Start `ssh-agent` for the script process.
 4. Test the GitHub SSH connection with `ssh -T git@github.com`.

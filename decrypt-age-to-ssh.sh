@@ -7,7 +7,7 @@ set -euo pipefail
 #   ./decrypt-age-to-ssh.sh             # decrypts every *.age file beside this script
 #   ./decrypt-age-to-ssh.sh file1.age   # optionally decrypt specific files
 #
-# age securely prompts for the passphrase for each file.
+# Prompts once for the shared age passphrase, then reuses it for every file.
 # Output names remove a trailing .age suffix when present.
 # Example: ./id_ed25519.age -> ~/.ssh/id_ed25519
 
@@ -19,6 +19,12 @@ fi
 
 if ! command -v ssh-agent >/dev/null 2>&1; then
   echo "Error: ssh-agent is not installed or not on PATH." >&2
+  exit 1
+fi
+
+if ! command -v expect >/dev/null 2>&1; then
+  echo "Error: expect is not installed or not on PATH." >&2
+  echo "expect is required so the age passphrase can be entered once and reused for every file." >&2
   exit 1
 fi
 
@@ -51,6 +57,31 @@ expand_path() {
     printf '%s\n' "$path"
   fi
 }
+
+decrypt_with_passphrase() {
+  INITDOTS_AGE_PASSPHRASE="$age_passphrase" \
+  INITDOTS_AGE_INPUT_FILE="$INITDOTS_AGE_INPUT_FILE" \
+  INITDOTS_AGE_OUTPUT_FILE="$INITDOTS_AGE_OUTPUT_FILE" \
+  expect <<'EOF'
+set timeout -1
+set passphrase $env(INITDOTS_AGE_PASSPHRASE)
+set input_file $env(INITDOTS_AGE_INPUT_FILE)
+set output_file $env(INITDOTS_AGE_OUTPUT_FILE)
+spawn age --decrypt --output $output_file $input_file
+expect {
+  -nocase -re "passphrase" {
+    send -- "$passphrase\r"
+    exp_continue
+  }
+  eof
+}
+set status [lindex [wait] 3]
+exit $status
+EOF
+}
+
+read -r -s -p "age passphrase: " age_passphrase
+echo
 
 for input_file in "${input_files[@]}"; do
   input_file="$(expand_path "$input_file")"
@@ -97,8 +128,9 @@ for input_file in "${input_files[@]}"; do
   echo "Moving to:   $output_file"
   echo
 
-  # age securely prompts for the passphrase.
-  age --decrypt --output "$tmp_file" "$input_file"
+  INITDOTS_AGE_INPUT_FILE="$input_file" \
+  INITDOTS_AGE_OUTPUT_FILE="$tmp_file" \
+  decrypt_with_passphrase
 
   if [[ "$output_basename" == "id_ed25519" ]]; then
     chmod 400 "$tmp_file"
@@ -112,6 +144,8 @@ for input_file in "${input_files[@]}"; do
   echo "Decrypted file moved to: $output_file"
   echo
 done
+
+unset age_passphrase INITDOTS_AGE_INPUT_FILE INITDOTS_AGE_OUTPUT_FILE
 
 echo "Testing GitHub SSH connection..."
 ssh -T git@github.com
