@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Decrypt one or more age-encrypted files using password-only symmetric encryption,
+# Decrypt age-encrypted files using password-only symmetric encryption,
 # then move the decrypted results into ~/.ssh.
 # Usage:
-#   ./decrypt-age-to-ssh.sh file1.age [file2.age ...]
+#   ./decrypt-age-to-ssh.sh             # decrypts every *.age file beside this script
+#   ./decrypt-age-to-ssh.sh file1.age   # optionally decrypt specific files
 #
-# If no files are passed, you will be prompted to enter files one at a time.
 # age securely prompts for the passphrase for each file.
 # Output names remove a trailing .age suffix when present.
 # Example: ./id_ed25519.age -> ~/.ssh/id_ed25519
@@ -29,19 +29,17 @@ ssh_dir="${HOME}/.ssh"
 mkdir -p "$ssh_dir"
 chmod 700 "$ssh_dir"
 
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 input_files=("$@")
 
 if [[ ${#input_files[@]} -eq 0 ]]; then
-  echo "Enter files to decrypt, one per line. Press Enter on a blank line when done."
-  while true; do
-    read -r -p "File to decrypt: " input_file
-    [[ -z "$input_file" ]] && break
-    input_files+=("$input_file")
-  done
+  shopt -s nullglob
+  input_files=("${script_dir}"/*.age)
+  shopt -u nullglob
 fi
 
 if [[ ${#input_files[@]} -eq 0 ]]; then
-  echo "Error: no files provided." >&2
+  echo "Error: no .age files found beside this script." >&2
   exit 1
 fi
 
