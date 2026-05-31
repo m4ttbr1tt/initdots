@@ -11,15 +11,9 @@ git clone https://github.com/m4ttbr1tt/initdots.git
 cd initdots
 ```
 
-Install prerequisites if needed:
-
-```bash
-# Debian/Ubuntu
-sudo apt update
-sudo apt install age git openssh-client expect
-```
-
 Run the decrypt/bootstrap script:
+
+The script installs its own runtime dependencies (`age`, `expect`, and OpenSSH client tools) when they are missing. It does not install `git`, because you already need `git` to clone this repo.
 
 ```bash
 ./decrypt-age-to-ssh.sh

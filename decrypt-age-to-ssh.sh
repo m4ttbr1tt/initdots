@@ -11,20 +11,68 @@ set -euo pipefail
 # Output names remove a trailing .age suffix when present.
 # Example: ./id_ed25519.age -> ~/.ssh/id_ed25519
 
-if ! command -v age >/dev/null 2>&1; then
-  echo "Error: age is not installed or not on PATH." >&2
-  echo "Install age first, then rerun this script." >&2
-  exit 1
-fi
+run_as_root() {
+  if [[ ${EUID:-$(id -u)} -eq 0 ]]; then
+    "$@"
+  elif command -v sudo >/dev/null 2>&1; then
+    sudo "$@"
+  else
+    echo "Error: installing dependencies requires root privileges or sudo." >&2
+    exit 1
+  fi
+}
 
-if ! command -v ssh-agent >/dev/null 2>&1; then
-  echo "Error: ssh-agent is not installed or not on PATH." >&2
-  exit 1
-fi
+install_dependencies() {
+  local missing=()
 
-if ! command -v expect >/dev/null 2>&1; then
-  echo "Error: expect is not installed or not on PATH." >&2
-  echo "expect is required so the age passphrase can be entered once and reused for every file." >&2
+  command -v age >/dev/null 2>&1 || missing+=(age)
+  command -v expect >/dev/null 2>&1 || missing+=(expect)
+  command -v ssh >/dev/null 2>&1 || missing+=(ssh)
+  command -v ssh-agent >/dev/null 2>&1 || missing+=(ssh-agent)
+
+  if [[ ${#missing[@]} -eq 0 ]]; then
+    return
+  fi
+
+  echo "Installing missing dependencies (excluding git): ${missing[*]}"
+
+  if command -v apt-get >/dev/null 2>&1; then
+    run_as_root apt-get update
+    run_as_root apt-get install -y age expect openssh-client
+  elif command -v dnf >/dev/null 2>&1; then
+    run_as_root dnf install -y age expect openssh-clients
+  elif command -v yum >/dev/null 2>&1; then
+    run_as_root yum install -y age expect openssh-clients
+  elif command -v pacman >/dev/null 2>&1; then
+    run_as_root pacman -Sy --needed --noconfirm age expect openssh
+  elif command -v zypper >/dev/null 2>&1; then
+    run_as_root zypper --non-interactive install age expect openssh-clients
+  elif command -v apk >/dev/null 2>&1; then
+    run_as_root apk add age expect openssh-client
+  elif command -v brew >/dev/null 2>&1; then
+    brew install age expect
+    if ! command -v ssh >/dev/null 2>&1 || ! command -v ssh-agent >/dev/null 2>&1; then
+      brew install openssh
+    fi
+  else
+    echo "Error: could not find a supported package manager to install: ${missing[*]}" >&2
+    echo "Please install age, expect, and OpenSSH client tools, then rerun this script." >&2
+    exit 1
+  fi
+
+  for command_name in age expect ssh ssh-agent; do
+    if ! command -v "$command_name" >/dev/null 2>&1; then
+      echo "Error: dependency is still missing after install attempt: $command_name" >&2
+      exit 1
+    fi
+  done
+}
+
+install_dependencies
+
+if ! command -v git >/dev/null 2>&1; then
+  echo "Error: git is not installed or not on PATH." >&2
+  echo "This script does not install git because it is expected to already exist before cloning initdots." >&2
   exit 1
 fi
 
