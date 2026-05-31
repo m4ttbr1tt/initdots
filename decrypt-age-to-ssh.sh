@@ -148,7 +148,20 @@ done
 unset age_passphrase INITDOTS_AGE_INPUT_FILE INITDOTS_AGE_OUTPUT_FILE
 
 echo "Testing GitHub SSH connection..."
-ssh -T git@github.com
+set +e
+ssh_output="$(ssh -T git@github.com 2>&1)"
+ssh_status=$?
+set -e
+printf '%s\n' "$ssh_output"
+
+# GitHub returns exit status 1 for a successful SSH authentication because it
+# does not provide shell access:
+#   Hi USER! You've successfully authenticated, but GitHub does not provide shell access.
+# Treat that as success, but fail on real SSH/authentication errors.
+if [[ $ssh_status -ne 0 && "$ssh_output" != *"successfully authenticated"* ]]; then
+  echo "Error: GitHub SSH connection test failed." >&2
+  exit "$ssh_status"
+fi
 
 repo_parent="${HOME}/git/github/m4ttbr1tt"
 repo_dir="${repo_parent}/dotfiles"
