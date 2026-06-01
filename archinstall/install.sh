@@ -73,6 +73,11 @@ PY
 }
 
 main() {
+  if command -v pacman >/dev/null 2>&1; then
+    echo "Updating archinstall before running install..."
+    run_as_root pacman -Sy --needed --noconfirm archinstall
+  fi
+
   require_cmd archinstall
   require_cmd openssl
   require_cmd python

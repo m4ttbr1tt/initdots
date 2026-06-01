@@ -30,7 +30,7 @@ The script will:
 
 ## Unattended Arch install
 
-This repo includes an `archinstall` wrapper that prompts for the install password, exports it as `ARCHINSTALL_PASSWORD` for that script process, hashes it, writes `archinstall/user_credentials.json`, then runs `archinstall`.
+This repo includes an `archinstall` wrapper that updates/installs `archinstall` with `pacman -Sy archinstall`, prompts for the install password, exports it as `ARCHINSTALL_PASSWORD` for that script process, hashes it, writes `archinstall/user_credentials.json`, then runs `archinstall`.
 
 On the Arch ISO:
 
@@ -40,6 +40,7 @@ pacman -Sy git
 git clone https://github.com/m4ttbr1tt/initdots.git
 cd initdots
 
+# The wrapper also updates archinstall as part of the normal install.
 ARCHINSTALL_USERNAME=matt ./archinstall/install.sh
 ```
 
