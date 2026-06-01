@@ -9,15 +9,12 @@
 !decrypt-age-to-ssh.sh
 !encrypt-with-age.sh
 
-# Allow encrypted bootstrap files
-!config.age
-!id_ed25519.age
-!id_ed25519.pub.age
-
-# Allow local plaintext staging folder, but only commit its placeholder
+# Allow local encryption folder.
+# Commit encrypted files and placeholder; ignore plaintext staging files.
 !encrypt/
 encrypt/*
 !encrypt/.gitkeep
+!encrypt/*.age
 
 # Allow archinstall files we intentionally commit
 !archinstall/

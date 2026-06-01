@@ -4,12 +4,12 @@ set -euo pipefail
 # Decrypt age-encrypted files using password-only symmetric encryption,
 # then move the decrypted results into ~/.ssh.
 # Usage:
-#   ./decrypt-age-to-ssh.sh             # decrypts every *.age file beside this script
-#   ./decrypt-age-to-ssh.sh file1.age   # optionally decrypt specific files
+#   ./decrypt-age-to-ssh.sh             # decrypts every *.age file under ./encrypt
+#   ./decrypt-age-to-ssh.sh file1.age   # optionally decrypt specific files/folders
 #
 # Prompts once for the shared age passphrase, then reuses it for every file.
 # Output names remove a trailing .age suffix when present.
-# Example: ./id_ed25519.age -> ~/.ssh/id_ed25519
+# Example: ./encrypt/id_ed25519.age -> ~/.ssh/id_ed25519
 
 run_as_root() {
   if [[ ${EUID:-$(id -u)} -eq 0 ]]; then
@@ -84,17 +84,10 @@ mkdir -p "$ssh_dir"
 chmod 700 "$ssh_dir"
 
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-input_files=("$@")
+input_paths=("$@")
 
-if [[ ${#input_files[@]} -eq 0 ]]; then
-  shopt -s nullglob
-  input_files=("${script_dir}"/*.age)
-  shopt -u nullglob
-fi
-
-if [[ ${#input_files[@]} -eq 0 ]]; then
-  echo "Error: no .age files found beside this script." >&2
-  exit 1
+if [[ ${#input_paths[@]} -eq 0 ]]; then
+  input_paths=("${script_dir}/encrypt")
 fi
 
 expand_path() {
@@ -131,19 +124,33 @@ EOF
 read -r -s -p "age passphrase: " age_passphrase
 echo
 
+input_files=()
+for input_path in "${input_paths[@]}"; do
+  input_path="$(expand_path "$input_path")"
+
+  if [[ ! -e "$input_path" ]]; then
+    echo "Error: path does not exist: $input_path" >&2
+    exit 1
+  fi
+
+  if [[ -d "$input_path" ]]; then
+    while IFS= read -r -d '' found_file; do
+      input_files+=("$found_file")
+    done < <(find "$input_path" -type f -name '*.age' -print0 | sort -z)
+  elif [[ -f "$input_path" ]]; then
+    input_files+=("$input_path")
+  else
+    echo "Error: not a regular file or directory: $input_path" >&2
+    exit 1
+  fi
+done
+
+if [[ ${#input_files[@]} -eq 0 ]]; then
+  echo "Error: no .age files found under: ${input_paths[*]}" >&2
+  exit 1
+fi
+
 for input_file in "${input_files[@]}"; do
-  input_file="$(expand_path "$input_file")"
-
-  if [[ ! -e "$input_file" ]]; then
-    echo "Error: file does not exist: $input_file" >&2
-    exit 1
-  fi
-
-  if [[ ! -f "$input_file" ]]; then
-    echo "Error: not a regular file: $input_file" >&2
-    exit 1
-  fi
-
   if [[ ! -r "$input_file" ]]; then
     echo "Error: file is not readable: $input_file" >&2
     exit 1
