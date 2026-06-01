@@ -232,10 +232,31 @@ fi
 
 cd "$repo_dir"
 
-if [[ ! -x ./setup ]]; then
-  echo "Error: ./setup is missing or not executable in $repo_dir" >&2
+os_id=""
+if [[ -r /etc/os-release ]]; then
+  # shellcheck disable=SC1091
+  . /etc/os-release
+  os_id="${ID:-}"
+fi
+
+case "$os_id" in
+  ubuntu)
+    setup_script="./setup"
+    ;;
+  arch|archlinux)
+    setup_script="./setuparch"
+    ;;
+  *)
+    echo "Error: unsupported OS for dotfiles setup: ${os_id:-unknown}" >&2
+    echo "Expected ubuntu or arch." >&2
+    exit 1
+    ;;
+esac
+
+if [[ ! -x "$setup_script" ]]; then
+  echo "Error: $setup_script is missing or not executable in $repo_dir" >&2
   exit 1
 fi
 
-echo "Running dotfiles setup..."
-./setup
+echo "Running dotfiles setup for ${os_id}: $setup_script"
+"$setup_script"

@@ -26,7 +26,7 @@ The script will:
 3. Start `ssh-agent` for the script process.
 4. Test the GitHub SSH connection with `ssh -T git@github.com`.
 5. Clone `git@github.com:m4ttbr1tt/dotfiles.git` into `~/git/github/m4ttbr1tt/dotfiles` if missing.
-6. Run `./setup` inside the dotfiles repo.
+6. Detect Ubuntu vs Arch from `/etc/os-release`, then run `./setup` for Ubuntu or `./setuparch` for Arch inside the dotfiles repo.
 
 ## Unattended Arch install
 
