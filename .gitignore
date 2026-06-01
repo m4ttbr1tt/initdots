@@ -14,6 +14,11 @@
 !id_ed25519.age
 !id_ed25519.pub.age
 
+# Allow local plaintext staging folder, but only commit its placeholder
+!encrypt/
+encrypt/*
+!encrypt/.gitkeep
+
 # Allow archinstall files we intentionally commit
 !archinstall/
 !archinstall/install.sh
