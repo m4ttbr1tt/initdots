@@ -240,7 +240,7 @@ if [[ -r /etc/os-release ]]; then
 fi
 
 case "$os_id" in
-  ubuntu)
+  debian)
     setup_script="./setup"
     ;;
   arch|archlinux)
@@ -248,7 +248,7 @@ case "$os_id" in
     ;;
   *)
     echo "Error: unsupported OS for dotfiles setup: ${os_id:-unknown}" >&2
-    echo "Expected ubuntu or arch." >&2
+    echo "Expected debian or arch." >&2
     exit 1
     ;;
 esac
