@@ -28,6 +28,36 @@ The script will:
 5. Clone `git@github.com:m4ttbr1tt/dotfiles.git` into `~/git/github/m4ttbr1tt/dotfiles` if missing.
 6. Run `./setup` inside the dotfiles repo.
 
+## Unattended Arch install
+
+This repo includes an `archinstall` wrapper that prompts for the install password, exports it as `ARCHINSTALL_PASSWORD` for that script process, hashes it, writes `archinstall/user_credentials.json`, then runs `archinstall`.
+
+On the Arch ISO:
+
+```bash
+pacman -Sy git
+
+git clone https://github.com/m4ttbr1tt/initdots.git
+cd initdots
+
+ARCHINSTALL_USERNAME=matt ./archinstall/install.sh
+```
+
+Optional overrides:
+
+```bash
+CONFIG=/path/to/user_configuration.json \
+CREDS=/tmp/user_credentials.json \
+ARCHINSTALL_USERNAME=matt \
+./archinstall/install.sh
+```
+
+Notes:
+
+- `archinstall/user_credentials.json` is generated and gitignored.
+- The generated JSON stores a SHA-512 password hash in `enc_password`, not the raw password.
+- Edit `archinstall/user_configuration.json` for your disk layout/profile, or generate a fuller one with `archinstall --dry-run`.
+
 ## Encrypting files
 
 To add or refresh encrypted files:
