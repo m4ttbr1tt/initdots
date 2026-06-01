@@ -12,6 +12,17 @@ CREDS="${CREDS:-$SCRIPT_DIR/user_credentials.json}"
 USERNAME="${ARCHINSTALL_USERNAME:-matt}"
 HOSTNAME="${ARCHINSTALL_HOSTNAME:-archlinux}"
 
+run_as_root() {
+  if [[ ${EUID:-$(id -u)} -eq 0 ]]; then
+    "$@"
+  elif command -v sudo >/dev/null 2>&1; then
+    sudo "$@"
+  else
+    echo "Error: updating archinstall requires root privileges or sudo." >&2
+    exit 1
+  fi
+}
+
 require_cmd() {
   if ! command -v "$1" >/dev/null 2>&1; then
     echo "Missing required command: $1" >&2
