@@ -54,9 +54,9 @@ cd ~/git/github/m4ttbr1tt/dotfiles
 
 `wallpapers`, `notes`, and `blog` clone with `--depth 1`.
 
-## [Dank website](https://m4ttbr1tt.github.io/initdots/)
+## [Dank website](https://danklinux.com/)
 
-A brief look at the finished setup: a Fedora workstation bootstrapped from this repo into a fully-loaded personal dotfiles environment.
+Fedora workstation running Dank Linux. 
 
 ![dank website preview](assets/dank.png)
 
