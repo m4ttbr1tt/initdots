@@ -240,15 +240,12 @@ if [[ -r /etc/os-release ]]; then
 fi
 
 case "$os_id" in
-  debian)
+  fedora)
     setup_script="./setup"
-    ;;
-  arch|archlinux)
-    setup_script="./setuparch"
     ;;
   *)
     echo "Error: unsupported OS for dotfiles setup: ${os_id:-unknown}" >&2
-    echo "Expected debian or arch." >&2
+    echo "Expected fedora." >&2
     exit 1
     ;;
 esac
