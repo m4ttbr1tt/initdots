@@ -9,6 +9,10 @@
 !decrypt-age-to-ssh.sh
 !encrypt-with-age.sh
 
+# Allow README assets
+!assets/
+!assets/dank.png
+
 # Allow local encryption folder.
 # Commit encrypted files and placeholder; ignore plaintext staging files.
 !encrypt/
